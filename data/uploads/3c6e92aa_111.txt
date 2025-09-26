@@ -1,0 +1,14 @@
+要实现两数之和相加的功能，可以编写一个简单的Python函数：
+
+```python
+def add_numbers(a, b):
+    return a + b
+```
+
+你可以将此函数直接调用，如：
+```python
+result = add_numbers(3, 5)
+print(result)  # 输出：8
+```
+
+这个函数接收两个整数作为参数，返回它们的和。

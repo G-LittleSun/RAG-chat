@@ -1,0 +1,67 @@
+# Ollama Chat API - Enhanced Python Dependencies
+# Core requirements for running the Ollama Chat application with RAG support
+
+# ==================== 核心Web框架 ====================
+fastapi>=0.104.0            # 现代、快速的Web框架
+uvicorn[standard]>=0.24.0   # ASGI服务器，支持WebSocket和SSL
+websockets>=12.0            # WebSocket支持
+
+# ==================== LangChain生态系统 ====================
+langchain>=0.1.0            # 大语言模型应用开发框架
+langchain-community>=0.0.10 # 社区贡献的组件，包含文档加载器
+langchain-core>=0.1.0       # 核心抽象和接口
+
+# ==================== Ollama集成 ====================
+ollama>=0.1.7               # Ollama Python客户端
+
+# ==================== RAG和向量数据库 ====================
+faiss-cpu>=1.7.4            # Facebook AI相似性搜索库（CPU版本）
+# faiss-gpu>=1.7.4          # GPU版本（如需要，取消注释并删除CPU版本）
+
+# ==================== 文档处理 ====================
+python-multipart>=0.0.6     # 文件上传支持（FastAPI）
+pypdf>=3.17.0               # PDF文档解析和处理
+python-docx>=1.1.0          # Microsoft Word文档处理
+unstructured>=0.11.0        # 通用文档解析器（支持多种格式）
+langchain-community>=0.0.10
+langchain-core>=0.1.0
+
+# Data Processing and Validation
+pydantic>=2.0.0
+
+# Security and SSL
+cryptography>=41.0.0
+
+# HTTP Client and Network
+httpx>=0.25.0
+aiofiles>=23.0.0
+
+# Type Hints and Tools
+typing-extensions>=4.0.0
+
+# Optional Dependencies - Uncomment as needed
+# Vector Database Support (for RAG functionality)
+# faiss-cpu>=1.7.4
+# chromadb>=0.4.0
+
+# Document Processing
+# python-multipart>=0.0.6
+# pypdf>=3.0.0
+# python-docx>=0.8.11
+
+# Environment Variable Management
+# python-dotenv>=1.0.0
+
+# Enhanced JSON Processing
+# orjson>=3.9.0
+
+# Development and Testing Tools
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# black>=23.0.0
+# flake8>=6.0.0
+# mypy>=1.0.0
+
+# Production Environment Tools
+# gunicorn>=21.0.0
+# supervisor>=4.2.0

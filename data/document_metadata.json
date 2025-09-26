@@ -1,0 +1,185 @@
+{
+  "0": {
+    "filename": "3a53db2f_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:34:11.722461",
+    "file_path": "data\\uploads\\3a53db2f_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:37:56.657884"
+  },
+  "1": {
+    "filename": "465b135d_222.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:34:13.831845",
+    "file_path": "data\\uploads\\465b135d_222.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:37:57.918283"
+  },
+  "2": {
+    "filename": "0b4b8ca4_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:34:15.883744",
+    "file_path": "data\\uploads\\0b4b8ca4_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:37:59.374325"
+  },
+  "3": {
+    "filename": "3c6e92aa_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:38:07.366447",
+    "file_path": "data\\uploads\\3c6e92aa_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:38:48.565490"
+  },
+  "4": {
+    "filename": "5bf6092d_222.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:38:09.481583",
+    "file_path": "data\\uploads\\5bf6092d_222.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:38:49.455788"
+  },
+  "5": {
+    "filename": "cad4c57c_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:38:11.567494",
+    "file_path": "data\\uploads\\cad4c57c_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:38:51.287551"
+  },
+  "6": {
+    "filename": "8aad2e34_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:39:09.265991",
+    "file_path": "data\\uploads\\8aad2e34_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:43:42.745274"
+  },
+  "7": {
+    "filename": "fd5d5da5_222.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:39:11.371634",
+    "file_path": "data\\uploads\\fd5d5da5_222.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:43:43.329212"
+  },
+  "8": {
+    "filename": "494ddcba_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:39:13.440320",
+    "file_path": "data\\uploads\\494ddcba_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:47:23.548738"
+  },
+  "9": {
+    "filename": "823a9c52_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:47:15.101895",
+    "file_path": "data\\uploads\\823a9c52_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:47:24.643857"
+  },
+  "10": {
+    "filename": "6df36eef_222.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:47:17.220381",
+    "file_path": "data\\uploads\\6df36eef_222.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:47:25.547712"
+  },
+  "11": {
+    "filename": "e7637b0f_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:47:19.300542",
+    "file_path": "data\\uploads\\e7637b0f_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:47:26.494990"
+  },
+  "12": {
+    "filename": "e23937a1_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:51:01.424909",
+    "file_path": "data\\uploads\\e23937a1_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-24T17:24:08.026817"
+  },
+  "13": {
+    "filename": "aa4c4c4a_222.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:51:03.539815",
+    "file_path": "data\\uploads\\aa4c4c4a_222.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-24T17:24:08.852683"
+  },
+  "14": {
+    "filename": "f76555e1_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T15:51:05.618303",
+    "file_path": "data\\uploads\\f76555e1_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T15:51:30.336306"
+  },
+  "15": {
+    "filename": "58920840_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T17:14:52.088699",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\58920840_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T17:42:35.161286"
+  },
+  "16": {
+    "filename": "2838e4d9_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-23T20:20:16.230188",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\2838e4d9_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-23T20:51:39.824044"
+  },
+  "17": {
+    "filename": "76bfbd02_333.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-25T18:45:40.021273",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\76bfbd02_333.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-26T11:27:19.270518"
+  },
+  "18": {
+    "filename": "39295c57_111.txt",
+    "chunks": 1,
+    "timestamp": "2025-09-26T11:03:20.780211",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\39295c57_111.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-26T11:27:18.826423"
+  },
+  "19": {
+    "filename": "5c4dce39_731.txt",
+    "chunks": 2,
+    "timestamp": "2025-09-26T11:14:00.040023",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\5c4dce39_731.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-26T11:27:18.311387"
+  },
+  "20": {
+    "filename": "41026d12_731.txt",
+    "chunks": 2,
+    "timestamp": "2025-09-26T11:26:03.130573",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\41026d12_731.txt",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-26T11:27:17.738590"
+  },
+  "21": {
+    "filename": "c149823c_《731》：以银幕为碑，铭记不能风化的历史.pdf",
+    "chunks": 2,
+    "timestamp": "2025-09-26T11:27:28.147665",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\c149823c_《731》：以银幕为碑，铭记不能风化的历史.pdf",
+    "deleted": true,
+    "deleted_timestamp": "2025-09-26T11:28:22.911883"
+  },
+  "22": {
+    "filename": "c66e1a7d_测试记录.pdf",
+    "chunks": 15,
+    "timestamp": "2025-09-26T11:32:51.085236",
+    "file_path": "D:\\LLMStudy\\LLM\\Langchain\\ollama_chatmodel\\data\\uploads\\c66e1a7d_测试记录.pdf",
+    "deleted": false
+  }
+}

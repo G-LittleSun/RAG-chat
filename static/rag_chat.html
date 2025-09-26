@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能文档问答 - Ollama Chat</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f7f7f8;
+            color: #374151;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #111827;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-section {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .upload-area:hover {
+            border-color: #6366f1;
+            background: #f0f7ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #6366f1;
+            background: #eef2ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .document-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px;
+        }
+
+        .document-item {
+            background: #f9fafb;
+            border: 1px solid #f3f4f6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .document-item:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .doc-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .doc-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .doc-meta {
+            font-size: 11px;
+            color: #6b7280;
+            display: flex;
+            gap: 8px;
+        }
+
+        .delete-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: #fef2f2;
+            color: #dc2626;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #fecaca;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .status-dot.connected {
+            background: #10b981;
+        }
+
+        .status-dot.processing {
+            background: #f59e0b;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 100%;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: #10b981;
+        }
+
+        .message.user .message-avatar {
+            background: #6366f1;
+            order: 2;
+        }
+
+        .message.system .message-avatar {
+            background: #f59e0b;
+        }
+
+        .message-content {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 12px 16px;
+            max-width: 70%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 15px;
+            line-height: 1.5;
+            border: 1px solid #f3f4f6;
+        }
+
+        .message.user .message-content {
+            background: #6366f1;
+            color: white;
+            order: 1;
+        }
+
+        .message.system .message-content {
+            background: #fef3c7;
+            border-color: #fed7aa;
+            color: #92400e;
+            font-size: 14px;
+        }
+
+        .typing-indicator {
+            display: none;
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 12px 16px;
+            max-width: 70%;
+            border: 1px solid #f3f4f6;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #9ca3af;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        /* 来源文档样式 */
+        .message-sources {
+            margin: 16px 0;
+            padding: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            max-width: 85%;
+        }
+
+        .sources-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .source-number {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .source-content {
+            flex: 1;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+
+        .source-relevance {
+            flex-shrink: 0;
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .chat-input {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-container {
+            position: relative;
+            max-width: 100%;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 8px 12px;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        #messageInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            resize: none;
+            font-size: 15px;
+            line-height: 1.5;
+            min-height: 24px;
+            max-height: 120px;
+            font-family: inherit;
+            color: #111827;
+        }
+
+        #messageInput::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #6366f1;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #4f46e5;
+        }
+
+        .send-button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .send-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .chat-messages::-webkit-scrollbar,
+        .document-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track,
+        .document-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb,
+        .document-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover,
+        .document-list::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin: 40px 0;
+        }
+
+        .welcome-message h3 {
+            color: #374151;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+            text-align: left;
+            max-width: 400px;
+            margin: 16px auto;
+        }
+
+        .feature-list li {
+            padding: 4px 0;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .chat-area {
+                height: 70vh;
+            }
+            
+            .message-content {
+                max-width: 85%;
+                font-size: 14px;
+            }
+            
+            .chat-header,
+            .sidebar-header {
+                padding: 12px 16px;
+            }
+            
+            .upload-section,
+            .document-list,
+            .chat-messages,
+            .chat-input {
+                padding: 12px 16px;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 智能文档问答</h2>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="normalMode">普通聊天</button>
+                    <button class="mode-btn" id="ragMode">文档问答</button>
+                </div>
+            </div>
+            
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <span class="upload-icon">📁</span>
+                    <div class="upload-text">点击或拖拽上传文档</div>
+                    <div class="upload-hint">支持 PDF, Word, TXT 文件</div>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf,.txt,.docx,.doc" multiple>
+            </div>
+            
+            <div class="document-list" id="documentList">
+                <!-- 文档列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <h1 id="chatTitle">🤖 Ollama Chat</h1>
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">连接中...</span>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h3>欢迎使用智能文档问答系统</h3>
+                    <p>选择模式开始对话：</p>
+                    <ul class="feature-list">
+                        <li>普通聊天：与AI进行日常对话</li>
+                        <li>文档问答：上传文档后进行智能问答</li>
+                        <li>支持PDF、Word、TXT格式文档</li>
+                        <li>基于FAISS向量数据库的语义检索</li>
+                        <li>RAG技术提供准确的上下文答案</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea id="messageInput" placeholder="输入您的消息..." rows="1"></textarea>
+                        <button id="sendBtn" class="send-button" disabled>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DocumentChatApp {
+            constructor() {
+                this.isRagMode = false;
+                this.isConnected = false;
+                this.websocket = null;
+                this.sessionId = this.generateSessionId();
+                this.documents = [];
+                
+                this.initElements();
+                this.initEventListeners();
+                this.checkRagStatus();
+                this.connectWebSocket();
+                this.autoResizeTextarea();
+            }
+
+            initElements() {
+                this.elements = {
+                    normalMode: document.getElementById('normalMode'),
+                    ragMode: document.getElementById('ragMode'),
+                    chatTitle: document.getElementById('chatTitle'),
+                    uploadArea: document.getElementById('uploadArea'),
+                    fileInput: document.getElementById('fileInput'),
+                    documentList: document.getElementById('documentList'),
+                    chatMessages: document.getElementById('chatMessages'),
+                    messageInput: document.getElementById('messageInput'),
+                    sendBtn: document.getElementById('sendBtn'),
+                    typingIndicator: document.getElementById('typingIndicator'),
+                    statusDot: document.getElementById('statusDot'),
+                    statusText: document.getElementById('statusText')
+                };
+            }
+
+            initEventListeners() {
+                this.elements.normalMode.addEventListener('click', () => this.switchMode(false));
+                this.elements.ragMode.addEventListener('click', () => this.switchMode(true));
+                this.elements.uploadArea.addEventListener('click', () => this.elements.fileInput.click());
+                this.elements.uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+                this.elements.uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                this.elements.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+                this.elements.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                this.elements.messageInput.addEventListener('input', this.handleInputChange.bind(this));
+                this.elements.messageInput.addEventListener('keypress', this.handleKeyPress.bind(this));
+                this.elements.sendBtn.addEventListener('click', this.sendMessage.bind(this));
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            switchMode(useRag) {
+                this.isRagMode = useRag;
+                
+                if (useRag) {
+                    this.elements.normalMode.classList.remove('active');
+                    this.elements.ragMode.classList.add('active');
+                    this.elements.chatTitle.textContent = '📚 文档问答模式';
+                } else {
+                    this.elements.ragMode.classList.remove('active');
+                    this.elements.normalMode.classList.add('active');
+                    this.elements.chatTitle.textContent = '💬 普通聊天模式';
+                }
+            }
+
+            handleInputChange() {
+                const hasText = this.elements.messageInput.value.trim().length > 0;
+                this.elements.sendBtn.disabled = !hasText || !this.isConnected;
+                this.autoResizeTextarea();
+            }
+
+            handleKeyPress(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!this.elements.sendBtn.disabled) {
+                        this.sendMessage();
+                    }
+                }
+            }
+
+            autoResizeTextarea() {
+                const textarea = this.elements.messageInput;
+                textarea.style.height = 'auto';
+                const height = Math.min(textarea.scrollHeight, 120);
+                textarea.style.height = height + 'px';
+            }
+
+            async checkRagStatus() {
+                try {
+                    // 获取文档列表
+                    const documentsResponse = await fetch('/api/documents');
+                    const documentsData = await documentsResponse.json();
+                    
+                    // 获取RAG状态
+                    const statusResponse = await fetch('/api/rag/status');
+                    const statusData = await statusResponse.json();
+                    
+                    if (statusData.available) {
+                        // 使用文档API的数据更新文档列表
+                        this.updateDocumentList(documentsData.documents);
+                    } else {
+                        this.elements.ragMode.disabled = true;
+                        this.showSystemMessage('⚠️ FAISS向量数据库不可用，文档问答功能已禁用');
+                    }
+                } catch (error) {
+                    this.showSystemMessage('❌ 无法检查RAG状态: ' + error.message);
+                    console.error('检查RAG状态失败:', error);
+                }
+            }
+
+            updateDocumentList(documents) {
+                // documents 现在直接是文档数组
+                if (Array.isArray(documents)) {
+                    this.documents = documents;
+                    this.renderDocumentList();
+                }
+            }
+
+            renderDocumentList() {
+                const listContainer = this.elements.documentList;
+                listContainer.innerHTML = '';
+
+                this.documents.forEach((doc, index) => {
+                    const docItem = document.createElement('div');
+                    docItem.className = 'document-item';
+                    docItem.innerHTML = `
+                        <div class="doc-info">
+                            <div class="doc-name">${doc.name || `文档 ${index + 1}`}</div>
+                            <div class="doc-meta">
+                                <span>${this.formatFileSize(doc.size || 0)}</span>
+                                <span>${doc.type || 'unknown'}</span>
+                            </div>
+                        </div>
+                        <button class="delete-btn" data-doc-id="${doc.id}" title="删除文档">
+                            ×
+                        </button>
+                    `;
+
+                    const deleteBtn = docItem.querySelector('.delete-btn');
+                    deleteBtn.addEventListener('click', () => this.deleteDocument(doc.id));
+
+                    listContainer.appendChild(docItem);
+                });
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            async deleteDocument(documentId) {
+                console.log('删除文档，传入的documentId:', documentId);
+                
+                if (!documentId || documentId === 'undefined') {
+                    console.error('文档ID无效:', documentId);
+                    this.showSystemMessage('❌ 文档ID无效，无法删除');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/documents/${documentId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        // 删除成功后重新获取文档列表，而不是使用splice修改本地数组
+                        await this.checkRagStatus();
+                        this.showSystemMessage('✅ 文档删除成功');
+                    } else {
+                        const error = await response.json();
+                        this.showSystemMessage('❌ 删除文档失败: ' + (error.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    this.showSystemMessage('❌ 删除文档失败: ' + error.message);
+                }
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                this.elements.uploadArea.classList.add('dragover');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                this.elements.uploadArea.classList.remove('dragover');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                this.elements.uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                this.uploadFiles(files);
+            }
+
+            handleFileSelect(e) {
+                const files = e.target.files;
+                this.uploadFiles(files);
+            }
+
+            async uploadFiles(files) {
+                for (let file of files) {
+                    await this.uploadFile(file);
+                }
+                this.elements.fileInput.value = '';
+            }
+
+            async uploadFile(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    this.showSystemMessage(`📤 正在上传文档: ${file.name}`);
+                    this.elements.statusDot.className = 'status-dot processing';
+                    this.elements.statusText.textContent = '处理中...';
+
+                    const response = await fetch('/api/documents/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        this.showSystemMessage(`✅ 文档上传成功: ${file.name}`);
+                        // 上传成功后重新获取完整的文档列表，而不是手动添加不完整的对象
+                        await this.checkRagStatus();
+                        
+                        if (!this.isRagMode) {
+                            this.switchMode(true);
+                        }
+                    } else {
+                        throw new Error(result.detail || '上传失败');
+                    }
+                } catch (error) {
+                    this.showSystemMessage(`❌ 上传失败: ${error.message}`);
+                } finally {
+                    this.updateConnectionStatus();
+                }
+            }
+
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/${this.sessionId}`;
+                
+                this.websocket = new WebSocket(wsUrl);
+                
+                this.websocket.onopen = () => {
+                    this.isConnected = true;
+                    this.updateConnectionStatus();
+                };
+                
+                this.websocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    this.handleWebSocketMessage(data);
+                };
+                
+                this.websocket.onclose = () => {
+                    this.isConnected = false;
+                    this.updateConnectionStatus();
+                    setTimeout(() => this.connectWebSocket(), 5000);
+                };
+                
+                this.websocket.onerror = (error) => {
+                    console.error('WebSocket错误:', error);
+                    this.showSystemMessage('❌ 连接错误，请刷新页面重试');
+                };
+            }
+
+            updateConnectionStatus() {
+                if (this.isConnected) {
+                    this.elements.statusDot.className = 'status-dot connected';
+                    this.elements.statusText.textContent = this.isRagMode ? '文档问答就绪' : '聊天就绪';
+                } else {
+                    this.elements.statusDot.className = 'status-dot';
+                    this.elements.statusText.textContent = '连接中...';
+                }
+                
+                this.elements.sendBtn.disabled = !this.isConnected || !this.elements.messageInput.value.trim();
+            }
+
+            handleWebSocketMessage(data) {
+                console.log('收到WebSocket消息:', data); // 调试信息
+                
+                if (data.type === 'user_message') {
+                    // 用户消息确认，已经在sendMessage中添加了
+                } else if (data.type === 'assistant_start') {
+                    this.currentMessageElement = this.addMessage('assistant', '');
+                    this.showTypingIndicator(false);
+                } else if (data.type === 'assistant_chunk') {
+                    if (this.currentMessageElement) {
+                        this.appendToMessage(this.currentMessageElement, data.content);
+                    }
+                } else if (data.type === 'assistant_end') {
+                    if (data.sources && data.sources.length > 0) {
+                        this.showSources(data.sources);
+                    }
+                    this.currentMessageElement = null;
+                } else if (data.type === 'error') {
+                    this.showSystemMessage(`❌ 错误: ${data.content}`);
+                    this.showTypingIndicator(false);
+                } else {
+                    console.log('未处理的消息类型:', data.type);
+                }
+            }
+
+            sendMessage() {
+                const message = this.elements.messageInput.value.trim();
+                if (!message || !this.isConnected) return;
+
+                this.addMessage('user', message);
+                this.showTypingIndicator(true);
+
+                const payload = {
+                    message: message,
+                    use_documents: this.isRagMode
+                };
+
+                this.websocket.send(JSON.stringify(payload));
+                
+                this.elements.messageInput.value = '';
+                this.handleInputChange();
+            }
+
+            addMessage(type, content) {
+                console.log('添加消息:', type, '内容:', content.length, '字符'); // 调试信息
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = type === 'user' ? '👤' : (type === 'system' ? '⚙️' : '🤖');
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = content;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+                
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                console.log('消息已添加到DOM，返回contentDiv'); // 调试信息
+                return contentDiv;
+            }
+
+            showSystemMessage(content) {
+                this.addMessage('system', content);
+            }
+
+            appendToMessage(messageElement, content) {
+                console.log('添加内容到消息:', content.length, '字符:', content.substring(0, 50)); // 调试信息
+                messageElement.textContent += content;
+                this.scrollToBottom();
+            }
+
+            showTypingIndicator(show) {
+                this.elements.typingIndicator.style.display = show ? 'flex' : 'none';
+                if (show) {
+                    this.scrollToBottom();
+                }
+            }
+
+            showSources(sources) {
+                if (!sources || sources.length === 0) return;
+                
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'message-sources';
+                sourcesDiv.innerHTML = `
+                    <div class="sources-header">📚 参考文档 (${sources.length}个)</div>
+                    <div class="sources-list">
+                        ${sources.map((source, index) => `
+                            <div class="source-item">
+                                <div class="source-number">${index + 1}</div>
+                                <div class="source-content">${source.preview || '无预览'}</div>
+                                ${source.relevance ? `<div class="source-relevance">相关度: ${(source.relevance * 100).toFixed(1)}%</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                this.elements.chatMessages.appendChild(sourcesDiv);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new DocumentChatApp();
+        });
+    </script>
+</body>
+</html>

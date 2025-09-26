@@ -1,0 +1,16 @@
+```cpp
+#include <iostream>
+
+int sum(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << "请输入两个整数：";
+    std::cin >> int(a);
+    std::cin >> int(b);
+    int result = a + b;
+    std::cout << result << std::endl;
+    return 0;
+}
+```
