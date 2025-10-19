@@ -229,8 +229,50 @@ class Config:
     streaming: bool = True
     
     # 向量存储配置
-    vector_store_type: str = "faiss"  # "memory" or "faiss"
-    faiss_index_type: str = "IndexFlatIP"
+    vector_store_type: str = "auto"  # 可选: "auto", "chromadb", "faiss_ip", "faiss_l2", "faiss_hnsw", "memory"
+    chromadb_collection_name: str = "rag_documents"  # ChromaDB集合名称
+    vector_db_path: str = "data/vector_store"  # 向量数据库存储路径
+```
+
+### 向量数据库配置
+
+本项目支持多种向量数据库，可在 `core/config.py` 中配置：
+
+#### 支持的向量数据库
+
+| 类型 | 说明 | 性能 | 持久化 | 适用场景 |
+|------|------|------|--------|----------|
+| `auto` | 自动选择（推荐） | - | - | 自动选择最优方案 |
+| `chromadb` | ChromaDB向量存储 | ⭐⭐⭐⭐ | ✅ | 生产环境，需要高级查询 |
+| `faiss_ip` | FAISS内积索引 | ⭐⭐⭐⭐⭐ | ✅ | 生产环境（最快） |
+| `faiss_l2` | FAISS L2距离索引 | ⭐⭐⭐⭐⭐ | ✅ | 生产环境 |
+| `faiss_hnsw` | FAISS HNSW索引 | ⭐⭐⭐⭐ | ✅ | 大规模数据 |
+| `memory` | 内存向量存储 | ⭐⭐⭐⭐⭐ | ❌ | 测试开发 |
+
+#### 快速配置
+
+**使用 ChromaDB:**
+```python
+# 在 core/config.py 中修改
+vector_store_type: str = "chromadb"
+chromadb_collection_name: str = "my_documents"
+```
+
+**使用 FAISS (默认):**
+```python
+vector_store_type: str = "faiss_ip"  # 或 "auto"
+```
+
+**安装 ChromaDB:**
+```bash
+pip install chromadb
+```
+
+**详细配置指南**: 查看 [docs/VECTOR_STORE_CONFIGURATION.md](docs/VECTOR_STORE_CONFIGURATION.md)
+
+**测试配置**:
+```bash
+python tools/test_vector_store_config.py
 ```
 
 ## 📖 API文档

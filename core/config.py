@@ -39,9 +39,15 @@ class Config:
     
     # 数据库配置
     database_url: Optional[str] = None  # 为后续SQL数据库扩展预留
-    vector_db_path: str = "data/vector_store"  # FAISS向量数据库路径
+    vector_db_path: str = "data/vector_store"  # 向量数据库路径
     document_metadata_path: str = "data/document_metadata.json"  # 文档元数据路径
     upload_path: str = "data/uploads"  # 文档上传路径
+    
+    # 向量存储配置
+    # 可选值: "auto", "chromadb", "faiss_ip", "faiss_l2", "faiss_hnsw", "memory"
+    # auto: 自动选择可用的向量存储（按优先级：faiss_ip > chromadb > faiss_l2 > faiss_hnsw > memory）
+    vector_store_type: str = "auto"  # 向量存储类型
+    chromadb_collection_name: str = "rag_documents"  # ChromaDB集合名称
     
     # 系统提示词
     system_prompt: str = (

@@ -22,13 +22,14 @@ from .config import config
 from .models import ChatModel
 from vector_stores.memory_vector_store import MemoryVectorStore
 from vector_stores.faiss_vector_store import FAISSVectorStore
+from vector_stores.chromadb_vector_store import ChromaDBVectorStore
 from vector_stores.vector_config import get_store_config, list_available_stores
 
 
 class SimpleRAGService:
     """简化的RAG服务"""
     
-    def __init__(self, vector_store_type: str = "auto", store_path: str = None):
+    def __init__(self, vector_store_type: str = None, store_path: str = None):
         if not DEPENDENCIES_AVAILABLE:    # 依赖包不可用
             raise ImportError("RAG服务依赖不可用")
         
@@ -37,6 +38,10 @@ class SimpleRAGService:
             base_url=config.ollama_base_url,
             model=config.ollama_embedding_model
         )
+        
+        # 使用配置文件中的向量存储类型，如果未指定的话
+        if vector_store_type is None:
+            vector_store_type = config.vector_store_type
         
         # 使用配置文件中的路径，如果未指定的话
         self.store_path = store_path or config.get_vector_db_path()
@@ -106,9 +111,9 @@ class SimpleRAGService:
         if store_type == "auto":
             # 自动选择可用的向量存储
             available_stores = list_available_stores()
-            config = get_store_config("auto")
+            store_config = get_store_config("auto")
             
-            for preferred_type in config["priority"]:
+            for preferred_type in store_config["priority"]:
                 if preferred_type in available_stores:
                     store_type = preferred_type
                     break
@@ -122,6 +127,13 @@ class SimpleRAGService:
             store_config = get_store_config(store_type)
             index_type = store_config.get("index_type", "IndexFlatL2")
             vector_store = FAISSVectorStore(self.embeddings, index_type, store_path)
+            # 尝试加载现有存储
+            vector_store.load()
+            return vector_store
+        elif store_type == "chromadb":
+            store_config = get_store_config(store_type)
+            collection_name = config.chromadb_collection_name
+            vector_store = ChromaDBVectorStore(self.embeddings, collection_name, store_path)
             # 尝试加载现有存储
             vector_store.load()
             return vector_store

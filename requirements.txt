@@ -17,6 +17,7 @@ ollama>=0.1.7               # Ollama Python客户端
 # ==================== RAG和向量数据库 ====================
 faiss-cpu>=1.7.4            # Facebook AI相似性搜索库（CPU版本）
 # faiss-gpu>=1.7.4          # GPU版本（如需要，取消注释并删除CPU版本）
+chromadb>=0.4.0             # ChromaDB向量数据库（可选）
 
 # ==================== 文档处理 ====================
 python-multipart>=0.0.6     # 文件上传支持（FastAPI）

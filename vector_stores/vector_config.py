@@ -31,11 +31,18 @@ VECTOR_STORES = {
         "class": "FAISSVectorStore", 
         "index_type": "IndexHNSWFlat",
         "persistent": True
+    },
+    "chromadb": {
+        "name": "ChromaDB向量存储",
+        "module": "chromadb_vector_store",
+        "class": "ChromaDBVectorStore",
+        "persistent": True,
+        "collection_name": "default_collection"
     }
 }
 
-# 默认优先级（首选FAISS内积索引）
-DEFAULT_PRIORITY = ["faiss_ip", "faiss_l2", "faiss_hnsw", "memory"]
+# 默认优先级（首选ChromaDB，然后是FAISS内积索引）
+DEFAULT_PRIORITY = ["chromadb", "faiss_ip", "faiss_l2", "faiss_hnsw", "memory"]
 
 
 def get_store_config(store_type: str = "auto") -> dict:
@@ -66,6 +73,14 @@ def list_available_stores() -> list:
         import faiss
         from langchain_community.vectorstores import FAISS
         available.extend(["faiss_l2", "faiss_ip", "faiss_hnsw"])
+    except ImportError:
+        pass
+    
+    # 检查ChromaDB存储
+    try:
+        import chromadb
+        from langchain_community.vectorstores import Chroma
+        available.append("chromadb")
     except ImportError:
         pass
     
