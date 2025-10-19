@@ -303,14 +303,6 @@ python ssl_manager.py --force
 python launcher.py --ssl-only
 ```
 
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request来改进项目！
-
-## 📄 许可证
-
-MIT License
-
 ---
 
 **🌟 享受智能对话和文档问答的全新体验！**
@@ -331,18 +323,6 @@ MIT License
 1. 在 `models.py` 中添加新的模型类
 2. 更新 `config.py` 中的模型配置
 3. 在 `app.py` 中注册新的API端点
-
-### 集成向量数据库
-
-```python
-# 在 extensions.py 中添加
-from langchain.vectorstores import FAISS
-
-class RAGChatModel(ChatModel):
-    def __init__(self, vectorstore_path: str):
-        super().__init__()
-        self.vectorstore = FAISS.load_local(vectorstore_path)
-```
 
 ## 🚨 故障排除
 

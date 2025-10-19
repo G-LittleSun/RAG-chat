@@ -1,0 +1,32 @@
+# ---- Python 缓存文件 ----
+__pycache__/
+
+# ---- 数据库文件 ----
+data/
+
+# ---- 虚拟环境 ----
+venv/
+env/
+.venv/
+
+# ---- IDE 配置文件 ----
+.vscode/
+.idea/
+
+# ---- Jupyter Notebook 缓存 ----
+.ipynb_checkpoints/
+
+# ---- 构建/打包文件 ----
+build/
+dist/
+*.egg-info/
+
+# ---- 日志文件 ----
+*.log
+
+# ---- 系统文件 ----
+.DS_Store
+Thumbs.db
+
+# ---- 环境变量文件 ----
+.env

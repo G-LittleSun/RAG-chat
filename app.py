@@ -681,13 +681,18 @@ if __name__ == "__main__":
     else:
         print("🔍 RAG功能: ❌ 不可用（需要安装: pip install faiss-cpu python-multipart pypdf python-docx unstructured）")
     
-    # 配置SSL
+    print("=" * 50)
+    
+    # 配置SSL并启动服务器
+    import uvicorn
     ssl_keyfile = None
     ssl_certfile = None
+    use_https = False
+    server_port = config.port
     
-    if config.enable_https:
+    # 方式1：检查 config.enable_https（主配置）
+    if getattr(config, 'enable_https', False):
         try:
-            # 创建SSL证书管理器
             from utils.ssl_manager import SSLCertificateManager
             ssl_manager = SSLCertificateManager('ssl')
             
@@ -700,26 +705,39 @@ if __name__ == "__main__":
             
             ssl_keyfile = ssl_manager.key_path
             ssl_certfile = ssl_manager.cert_path
-            print(f"🔒 HTTPS模式: 启用 (端口 {config.port})")
+            use_https = True
+            print("🔒 HTTPS已启用 (通过SSL管理器)")
             
         except Exception as e:
-            print(f"⚠️  SSL配置失败，切换到HTTP模式: {e}")
-            config.enable_https = False
-            ssl_keyfile = None
-            ssl_certfile = None
+            print(f"⚠️  SSL配置失败: {e}")
+            use_https = False
     
-    if not config.enable_https:
-        print(f"🔓 HTTP模式: 启用 (端口 {config.port})")
+    # 方式2：检查 config.use_ssl（备用配置）
+    elif getattr(config, 'use_ssl', False):
+        if hasattr(config, 'ssl_files_exist') and config.ssl_files_exist():
+            import os
+            ssl_keyfile = os.path.join(os.path.dirname(__file__), config.ssl_key_path)
+            ssl_certfile = os.path.join(os.path.dirname(__file__), config.ssl_cert_path)
+            server_port = getattr(config, 'ssl_port', config.port)
+            use_https = True
+            print("🔒 HTTPS已启用 (直接证书文件)")
+        else:
+            print("⚠️  警告：SSL已启用但证书文件不存在，回退到HTTP模式")
+            print("   请运行 generate_ssl.bat 生成证书")
     
-    print(f"📋 API文档: {'https' if config.enable_https else 'http'}://localhost:{config.port}/docs")
-    print(f"💬 聊天界面: {'https' if config.enable_https else 'http'}://localhost:{config.port}/chat")
-    print("=" * 50)
+    if not use_https:
+        print(f"🔓 HTTP模式: 启用 (端口 {server_port})")
+    else:
+        print(f"🔒 HTTPS模式: 启用 (端口 {server_port})")
     
-    # 启动服务
+    print(f"📋 API文档: {'https' if use_https else 'http'}://localhost:{server_port}/docs")
+    print(f"💬 聊天界面: {'https' if use_https else 'http'}://localhost:{server_port}/chat")
+    
+    # 启动服务器
     uvicorn.run(
         "app:app",
         host=config.host,
-        port=config.port,
+        port=server_port,
         ssl_keyfile=ssl_keyfile,
         ssl_certfile=ssl_certfile,
         reload=config.debug,
@@ -727,37 +745,10 @@ if __name__ == "__main__":
     )
 
 
-def run_server():
-    """启动服务器"""
-    import os
-    
-    # 检查是否启用SSL
-    if config.use_ssl and config.ssl_files_exist():
-        print("🔒 启用HTTPS模式")
-        uvicorn.run(
-            "app:app",
-            host=config.host,
-            port=config.ssl_port,
-            reload=config.debug,
-            ssl_keyfile=os.path.join(os.path.dirname(__file__), config.ssl_key_path),
-            ssl_certfile=os.path.join(os.path.dirname(__file__), config.ssl_cert_path)
-        )
-    else:
-        if config.use_ssl:
-            print("⚠️  警告：SSL已启用但证书文件不存在，回退到HTTP模式")
-            print("   请运行 generate_ssl.bat 生成证书")
-        print("🔓 使用HTTP模式")
-        uvicorn.run(
-            "app:app",
-            host=config.host,
-            port=config.port,
-            reload=config.debug
-        )
-
-
 def run_server_with_ssl():
-    """强制启用SSL启动服务器"""
+    """强制启用SSL启动服务器 - 提供给外部调用的辅助函数"""
     import os
+    import uvicorn
     
     # 检查SSL证书文件
     cert_path = os.path.join(os.path.dirname(__file__), config.ssl_cert_path)
@@ -774,13 +765,71 @@ def run_server_with_ssl():
     uvicorn.run(
         "app:app",
         host=config.host,
-        port=config.ssl_port,
+        port=getattr(config, 'ssl_port', config.port),
         reload=config.debug,
         ssl_keyfile=key_path,
         ssl_certfile=cert_path
     )
     return True
+    """启动服务器 - 统一的启动逻辑，支持多种SSL配置方式"""
+    import os
+    import uvicorn
+    
+    ssl_keyfile = None
+    ssl_certfile = None
+    use_https = False
+    server_port = config.port
+    
+    # 方式1：检查 config.enable_https（主配置）
+    if getattr(config, 'enable_https', False):
+        try:
+            from utils.ssl_manager import SSLCertificateManager
+            ssl_manager = SSLCertificateManager('ssl')
+            
+            # 确保证书存在且有效
+            if not ssl_manager.certificate_exists() or not ssl_manager.certificate_valid():
+                print("� 正在生成SSL证书...")
+                success = ssl_manager.generate_certificate()
+                if not success:
+                    raise Exception("SSL证书生成失败")
+            
+            ssl_keyfile = ssl_manager.key_path
+            ssl_certfile = ssl_manager.cert_path
+            use_https = True
+            print("🔒 HTTPS已启用 (通过SSL管理器)")
+            
+        except Exception as e:
+            print(f"⚠️  SSL配置失败: {e}")
+            use_https = False
+    
+    # 方式2：检查 config.use_ssl（备用配置）
+    elif getattr(config, 'use_ssl', False):
+        if hasattr(config, 'ssl_files_exist') and config.ssl_files_exist():
+            ssl_keyfile = os.path.join(os.path.dirname(__file__), config.ssl_key_path)
+            ssl_certfile = os.path.join(os.path.dirname(__file__), config.ssl_cert_path)
+            server_port = getattr(config, 'ssl_port', config.port)
+            use_https = True
+            print("🔒 HTTPS已启用 (直接证书文件)")
+        else:
+            print("⚠️  警告：SSL已启用但证书文件不存在，回退到HTTP模式")
+            print("   请运行 generate_ssl.bat 生成证书")
+    
+    if not use_https:
+        print(f"🔓 HTTP模式: 启用 (端口 {server_port})")
+    else:
+        print(f"🔒 HTTPS模式: 启用 (端口 {server_port})")
+    
+    print(f"📋 API文档: {'https' if use_https else 'http'}://localhost:{server_port}/docs")
+    print(f"💬 聊天界面: {'https' if use_https else 'http'}://localhost:{server_port}/chat")
+    
+    # 启动服务器
+    uvicorn.run(
+        "app:app",
+        host=config.host,
+        port=server_port,
+        ssl_keyfile=ssl_keyfile,
+        ssl_certfile=ssl_certfile,
+        reload=config.debug,
+        access_log=False
+    )
 
-
-if __name__ == "__main__":
-    run_server()
