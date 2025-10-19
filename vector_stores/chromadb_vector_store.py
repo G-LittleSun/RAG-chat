@@ -11,14 +11,36 @@ from langchain.schema import Document
 
 
 class ChromaDBVectorStore:
-    """ChromaDB向量存储实现"""
+    """ChromaDB向量存储实现，支持本地和远程服务器"""
     
-    def __init__(self, embeddings, collection_name: str = "default_collection", store_path: str = "chroma_store"):
+    def __init__(self, embeddings, collection_name: str = "default_collection", 
+                 store_path: str = "chroma_store",
+                 remote_host: str = None,
+                 remote_port: int = 8000,
+                 use_ssl: bool = False,
+                 api_token: str = None):
+        """
+        初始化 ChromaDB 向量存储
+        
+        Args:
+            embeddings: 嵌入模型
+            collection_name: 集合名称
+            store_path: 本地存储路径（remote_host 为 None 时使用）
+            remote_host: 远程服务器地址（例如: "192.168.1.100" 或 "chromadb.example.com"）
+            remote_port: 远程服务器端口，默认 8000
+            use_ssl: 是否使用 HTTPS 连接远程服务器
+            api_token: API 认证令牌（如果远程服务器需要）
+        """
         self.embeddings = embeddings
         self.collection_name = collection_name
         self.store_path = store_path
+        self.remote_host = remote_host
+        self.remote_port = remote_port
+        self.use_ssl = use_ssl
+        self.api_token = api_token
         self.store = None    # ChromaDB向量存储实例
         self.collection = None  # ChromaDB集合实例
+        self.is_remote = remote_host is not None  # 是否使用远程模式
         
         try:
             import chromadb
@@ -26,11 +48,36 @@ class ChromaDBVectorStore:
             self.chromadb = chromadb
             self.Chroma = Chroma
             self.available = True
-            print("✅ ChromaDB 可用")
+            
+            # 显示使用模式
+            if self.is_remote:
+                protocol = "https" if use_ssl else "http"
+                print(f"✅ ChromaDB 可用（远程模式: {protocol}://{remote_host}:{remote_port}）")
+            else:
+                print(f"✅ ChromaDB 可用（本地模式: {store_path}）")
+                
         except ImportError as e:
             print(f"❌ ChromaDB不可用: {e}")
             print("💡 安装提示: pip install chromadb")
             self.available = False
+    
+    def _get_chroma_client(self):
+        """获取 ChromaDB 客户端（本地或远程）"""
+        if self.is_remote:
+            # 远程客户端
+            headers = {}
+            if self.api_token:
+                headers["Authorization"] = f"Bearer {self.api_token}"
+            
+            return self.chromadb.HttpClient(
+                host=self.remote_host,
+                port=self.remote_port,
+                ssl=self.use_ssl,
+                headers=headers if headers else None
+            )
+        else:
+            # 本地客户端
+            return self.chromadb.PersistentClient(path=self.store_path)
     
     def create_from_documents(self, documents: List[Document]) -> bool:
         """从文档创建向量存储"""
@@ -39,7 +86,8 @@ class ChromaDBVectorStore:
             return False
         
         try:
-            print(f"🔧 创建ChromaDB向量存储，处理 {len(documents)} 个文档...")
+            mode = "远程" if self.is_remote else "本地"
+            print(f"🔧 创建ChromaDB向量存储（{mode}模式），处理 {len(documents)} 个文档...")
             
             # 提取文档内容和元数据
             texts = [doc.page_content for doc in documents]
@@ -47,20 +95,31 @@ class ChromaDBVectorStore:
             
             print(f"📝 提取了 {len(texts)} 个文本块")
             
-            # 确保存储目录存在
-            os.makedirs(self.store_path, exist_ok=True)
+            if self.is_remote:
+                # 远程模式：使用 HttpClient
+                print(f"🌐 连接到远程ChromaDB服务器...")
+                client = self._get_chroma_client()
+                
+                self.store = self.Chroma.from_texts(
+                    texts=texts,
+                    embedding=self.embeddings,
+                    metadatas=metadatas,
+                    collection_name=self.collection_name,
+                    client=client
+                )
+            else:
+                # 本地模式：使用 persist_directory
+                os.makedirs(self.store_path, exist_ok=True)
+                
+                self.store = self.Chroma.from_texts(
+                    texts=texts,
+                    embedding=self.embeddings,
+                    metadatas=metadatas,
+                    collection_name=self.collection_name,
+                    persist_directory=self.store_path
+                )
             
-            # 创建ChromaDB向量存储
-            print("🔧 使用ChromaDB创建向量存储...")
-            self.store = self.Chroma.from_texts(
-                texts=texts,
-                embedding=self.embeddings,
-                metadatas=metadatas,
-                collection_name=self.collection_name,
-                persist_directory=self.store_path
-            )
-            
-            print("✅ ChromaDB向量存储创建成功")
+            print(f"✅ ChromaDB向量存储创建成功（{mode}模式）")
             return True
             
         except Exception as e:
@@ -186,29 +245,47 @@ class ChromaDBVectorStore:
             return False
     
     def load(self) -> bool:
-        """从磁盘加载向量存储"""
+        """从磁盘或远程服务器加载向量存储"""
         if not self.available:
             return False
         
         try:
-            print(f"📂 从 {self.store_path} 加载ChromaDB向量存储...")
-            
-            # 检查存储目录是否存在
-            if not os.path.exists(self.store_path):
-                print(f"❌ 存储目录不存在: {self.store_path}")
-                return False
-            
-            # 加载现有的ChromaDB存储
-            self.store = self.Chroma(
-                collection_name=self.collection_name,
-                embedding_function=self.embeddings,
-                persist_directory=self.store_path
-            )
-            
-            # 验证加载是否成功
-            info = self.get_info()
-            print(f"✅ ChromaDB向量存储加载成功，包含 {info['documents']} 个文档")
-            return True
+            if self.is_remote:
+                # 远程模式
+                print(f"🌐 连接到远程ChromaDB服务器 {self.remote_host}:{self.remote_port}...")
+                
+                client = self._get_chroma_client()
+                
+                self.store = self.Chroma(
+                    collection_name=self.collection_name,
+                    embedding_function=self.embeddings,
+                    client=client
+                )
+                
+                info = self.get_info()
+                print(f"✅ 连接远程ChromaDB成功，包含 {info['documents']} 个文档")
+                return True
+                
+            else:
+                # 本地模式
+                print(f"📂 从 {self.store_path} 加载ChromaDB向量存储...")
+                
+                # 检查存储目录是否存在
+                if not os.path.exists(self.store_path):
+                    print(f"❌ 存储目录不存在: {self.store_path}")
+                    return False
+                
+                # 加载现有的ChromaDB存储
+                self.store = self.Chroma(
+                    collection_name=self.collection_name,
+                    embedding_function=self.embeddings,
+                    persist_directory=self.store_path
+                )
+                
+                # 验证加载是否成功
+                info = self.get_info()
+                print(f"✅ ChromaDB向量存储加载成功，包含 {info['documents']} 个文档")
+                return True
             
         except Exception as e:
             print(f"❌ 加载ChromaDB失败: {e}")

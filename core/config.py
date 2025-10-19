@@ -49,6 +49,13 @@ class Config:
     vector_store_type: str = "auto"  # 向量存储类型
     chromadb_collection_name: str = "rag_documents"  # ChromaDB集合名称
     
+    # ChromaDB 远程服务器配置（可选）
+    # 如果设置了 chromadb_remote_host，将使用远程服务器而不是本地存储
+    chromadb_remote_host: Optional[str] = None  # 远程服务器地址，例如: "192.168.1.100" 或 "chromadb.example.com"
+    chromadb_remote_port: int = 8000  # 远程服务器端口
+    chromadb_use_ssl: bool = False  # 是否使用 HTTPS 连接远程服务器
+    chromadb_api_token: Optional[str] = None  # API 认证令牌（如果远程服务器需要）
+    
     # 系统提示词
     system_prompt: str = (
         "You are a helpful AI assistant. You can help with coding, "

@@ -133,7 +133,18 @@ class SimpleRAGService:
         elif store_type == "chromadb":
             store_config = get_store_config(store_type)
             collection_name = config.chromadb_collection_name
-            vector_store = ChromaDBVectorStore(self.embeddings, collection_name, store_path)
+            
+            # 创建 ChromaDB 向量存储（支持本地和远程）
+            vector_store = ChromaDBVectorStore(
+                embeddings=self.embeddings,
+                collection_name=collection_name,
+                store_path=store_path,
+                remote_host=config.chromadb_remote_host,
+                remote_port=config.chromadb_remote_port,
+                use_ssl=config.chromadb_use_ssl,
+                api_token=config.chromadb_api_token
+            )
+            
             # 尝试加载现有存储
             vector_store.load()
             return vector_store
