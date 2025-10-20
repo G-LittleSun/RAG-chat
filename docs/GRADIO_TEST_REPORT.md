@@ -93,6 +93,38 @@
 - **修复时间**: 2025-10-20
 - **验证**: 待重新测试
 
+### UI-002: 双滚动条问题（已修复）
+- **问题描述**: 当对话内容超过一定长度时，动态增长过程中同时出现两根滚动条
+- **影响范围**: 普通聊天和 RAG 问答的 Chatbot 组件
+- **严重程度**: 🟡 中 - 影响用户体验，滚动操作混乱
+- **复现步骤**: 
+  1. 发送多条消息让对话内容超过窗口高度
+  2. 在 AI 流式响应过程中观察
+  3. 可以看到外层容器和 Chatbot 组件各有一个滚动条
+- **修复状态**: ✅ **已修复**
+- **修复方案**: 
+  ```css
+  /* 修复双滚动条问题 - 确保 Chatbot 组件固定高度 */
+  .gradio-container .chatbot {
+      height: 500px !important;
+      max-height: 500px !important;
+      overflow-y: auto !important;
+  }
+  
+  /* 修复对话容器的滚动问题 */
+  .gradio-container .chatbot .wrap {
+      height: 100% !important;
+      overflow-y: auto !important;
+  }
+  
+  /* 隐藏外层容器的滚动条 */
+  .gradio-container .overflow-y-auto {
+      overflow-y: visible !important;
+  }
+  ```
+- **修复时间**: 2025-10-20
+- **验证**: 待重新测试
+
 ---
 
 ## 🔄 待测试项
@@ -162,6 +194,39 @@
 - **修复文件**: `gradio_ui.py`
 - **修复时间**: 2025-10-20
 - **验证状态**: ✅ 已验证通过
+
+### BUG-002: 双滚动条显示问题
+- **问题描述**: 对话内容动态增长时出现两根滚动条（外层 + 内层）
+- **根本原因**: 
+  1. 外层 `.bubble-wrap` 容器启用了 `overflow-y: auto`
+  2. 内层 `.chatbot` 组件也有滚动
+  3. 用户输入时，外层预留滚动空间，导致双滚动条
+- **诊断方法**: 浏览器 Console 运行诊断脚本，发现：
+  ```
+  🔴 第 0 层有滚动: chatbot
+  🔴 第 8 层有滚动: bubble-wrap  ← 罪魁祸首！
+  ```
+- **影响范围**: 普通聊天和 RAG 问答标签页
+- **严重程度**: 🟡 中等 - 影响用户体验
+- **修复方案**: 
+  1. 禁用外层 `.bubble-wrap` 的滚动
+  2. 固定 `.chatbot` 组件高度为 500px
+  3. 确保只有 Chatbot 内部有滚动条
+  ```css
+  .bubble-wrap {
+      overflow: visible !important;
+      overflow-y: visible !important;
+      max-height: none !important;
+  }
+  .chatbot {
+      height: 500px !important;
+      overflow-y: auto !important;
+  }
+  ```
+- **修复文件**: `gradio_ui.py` (custom_css)
+- **修复时间**: 2025-10-20
+- **用户分析**: "外边的框预留出了一个滚动条的空间用于存放回答，然后内层的滚动条则是滚动已有的内容" ✅ 精准！
+- **验证状态**: 🔵 待验证（需重启应用）
 
 ---
 

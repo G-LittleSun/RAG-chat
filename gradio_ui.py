@@ -43,10 +43,66 @@ class GradioInterface:
         """
         # 自定义 CSS 样式
         custom_css = """
-        .chat-container {max-width: 900px; margin: 0 auto;}
-        .document-card {border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 10px 0;}
-        .status-success {color: #4caf50; font-weight: bold;}
-        .status-error {color: #f44336; font-weight: bold;}
+        /* 容器样式 */
+        .chat-container {
+            max-width: 900px; 
+            margin: 0 auto;
+        }
+        
+        /* 文档卡片样式 */
+        .document-card {
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin: 10px 0;
+        }
+        
+        /* 状态提示样式 */
+        .status-success {
+            color: #4caf50; 
+            font-weight: bold;
+        }
+        .status-error {
+            color: #f44336; 
+            font-weight: bold;
+        }
+        
+        /* ==================== 修复双滚动条问题（终极版本） ==================== */
+        
+        /* 🎯 核心修复：强制禁用 bubble-wrap 的滚动（所有状态） */
+        .bubble-wrap,
+        .bubble-wrap.svelte-gjtrl6,
+        div.bubble-wrap {
+            overflow: visible !important;
+            overflow-y: visible !important;
+            overflow-x: visible !important;
+            max-height: none !important;
+            height: auto !important;
+        }
+        
+        /* 🎯 确保 Chatbot 固定高度并可滚动 */
+        .chatbot,
+        .chatbot.svelte-7ddecg,
+        .md.chatbot {
+            height: 500px !important;
+            max-height: 500px !important;
+            min-height: 500px !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        
+        /* 强制应用到所有可能的父容器 */
+        .gradio-container *:not(.chatbot):not(.chatbot *) {
+            overflow-y: visible !important;
+        }
+        
+        /* 特别针对 svelte 生成的类 */
+        [class*="bubble-wrap"],
+        [class*="svelte-gjtrl6"] {
+            overflow: visible !important;
+            overflow-y: visible !important;
+            max-height: none !important;
+        }
         """
         
         with gr.Blocks(
@@ -425,6 +481,53 @@ class GradioInterface:
                         None,
                         vector_status_output
                     )
+            
+            # ============ 页面加载时执行 JavaScript 修复双滚动条 ============
+            interface.load(
+                None,
+                None,
+                None,
+                js="""
+                function() {
+                    console.log('🔧 正在应用双滚动条修复...');
+                    
+                    // 修复函数
+                    function fixDoubleScrollbar() {
+                        // 禁用所有 bubble-wrap 的滚动
+                        document.querySelectorAll('.bubble-wrap, [class*="bubble-wrap"]').forEach(el => {
+                            el.style.setProperty('overflow', 'visible', 'important');
+                            el.style.setProperty('overflow-y', 'visible', 'important');
+                            el.style.setProperty('max-height', 'none', 'important');
+                        });
+                        
+                        // 确保 chatbot 固定高度
+                        document.querySelectorAll('.chatbot').forEach(el => {
+                            el.style.setProperty('height', '500px', 'important');
+                            el.style.setProperty('max-height', '500px', 'important');
+                            el.style.setProperty('overflow-y', 'auto', 'important');
+                        });
+                    }
+                    
+                    // 立即执行一次
+                    fixDoubleScrollbar();
+                    
+                    // 监听 DOM 变化，持续修复（针对流式响应）
+                    const observer = new MutationObserver((mutations) => {
+                        fixDoubleScrollbar();
+                    });
+                    
+                    // 开始监听
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true,
+                        attributeFilter: ['style', 'class']
+                    });
+                    
+                    console.log('✅ 双滚动条修复已激活（持续监听中）');
+                }
+                """
+            )
         
         return interface
 
