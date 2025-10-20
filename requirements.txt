@@ -5,6 +5,7 @@
 fastapi>=0.104.0            # 现代、快速的Web框架
 uvicorn[standard]>=0.24.0   # ASGI服务器，支持WebSocket和SSL
 websockets>=12.0            # WebSocket支持
+gradio>=4.0.0               # Gradio界面框架（新增）
 
 # ==================== LangChain生态系统 ====================
 langchain>=0.1.0            # 大语言模型应用开发框架

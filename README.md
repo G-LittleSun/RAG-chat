@@ -8,13 +8,13 @@
 
 ## ✨ 核心特性
 
+- 🎨 **Gradio 界面**: 现代化、易用的 Web UI（推荐）⭐ NEW
 - 🤖 **双模式对话**: 普通聊天 + 基于文档的 RAG 问答
 - 📚 **多格式支持**: PDF、Word、TXT 文档智能解析
 - 🗄️ **灵活向量存储**: 支持 ChromaDB（本地/远程）、FAISS、内存存储
 - 🌐 **远程部署**: 支持连接到远程 ChromaDB 服务器，多设备共享数据
 - 🔒 **安全通信**: HTTPS/WSS 加密，自动证书管理
-- 🎨 **现代界面**: ChatGPT 风格 UI，响应式设计
-- ⚡ **流式响应**: WebSocket 实时通信，打字机效果
+- ⚡ **流式响应**: 实时通信，打字机效果
 
 ## � 快速开始
 
@@ -42,9 +42,10 @@ python launcher.py --https
 
 | 服务 | HTTP | HTTPS |
 |------|------|-------|
-| 聊天界面 | http://localhost:8000/chat | https://localhost:8443/chat |
-| 文档问答 | http://localhost:8000/static/rag_chat.html | https://localhost:8443/static/rag_chat.html |
-| API 文档 | http://localhost:8000/docs | https://localhost:8443/docs |
+| 🎨 Gradio 界面（推荐）⭐ NEW | http://localhost:8000/gradio | https://localhost:8443/gradio |
+| 💬 聊天界面 | http://localhost:8000/chat | https://localhost:8443/chat |
+| 📚 文档问答 | http://localhost:8000/rag-chat | https://localhost:8443/rag-chat |
+| 📖 API 文档 | http://localhost:8000/docs | https://localhost:8443/docs |
 
 ## ⚙️ 向量数据库配置
 

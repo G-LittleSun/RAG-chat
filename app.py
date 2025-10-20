@@ -18,6 +18,15 @@ import uvicorn
 from core.config import config
 from core.session_manager import session_manager
 
+# 导入 Gradio 界面
+try:
+    import gradio as gr
+    from gradio_ui import create_gradio_app
+    GRADIO_ENABLED = True
+except ImportError:
+    GRADIO_ENABLED = False
+    print("⚠️  Gradio 界面不可用 - 请安装 gradio: pip install gradio")
+
 # 导入模块化的RAG服务
 try:
     from core.simple_rag_service import SimpleRAGService as DocumentRAGService
@@ -141,6 +150,33 @@ app.add_middleware(
 # 静态文件服务
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# 挂载 Gradio 界面到 /gradio 路径
+if GRADIO_ENABLED and RAG_ENABLED:
+    try:
+        # 导入 ChatModel
+        from core.models import ChatModel
+        
+        # 创建 ChatModel 实例（用于普通聊天）
+        chat_model = ChatModel()
+        
+        # 创建 Gradio 应用
+        gradio_app = create_gradio_app(
+            chat_model=chat_model,
+            session_manager=session_manager,
+            rag_service=_rag_service
+        )
+        
+        # 挂载到 FastAPI
+        app = gr.mount_gradio_app(app, gradio_app, path="/gradio")
+        print("✅ Gradio 界面已挂载到 /gradio")
+    except Exception as e:
+        print(f"⚠️  Gradio 挂载失败: {str(e)}")
+elif not GRADIO_ENABLED:
+    print("⚠️  Gradio 未启用 - 请安装 gradio: pip install gradio")
+elif not RAG_ENABLED:
+    print("⚠️  RAG 服务未启用 - Gradio 界面需要 RAG 支持")
+
+
 
 class ConnectionManager:
     """WebSocket连接管理器"""
@@ -167,18 +203,60 @@ manager = ConnectionManager()
 @app.get("/")
 async def read_root():
     """根路径，返回简单的HTML页面"""
-    html_content = """
+    gradio_link = '<p>🎨 Gradio 界面: <a href="/gradio">/gradio</a> (推荐)</p>' if GRADIO_ENABLED else ''
+    
+    html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <title>Ollama Chat</title>
         <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            h1 {{
+                color: #333;
+            }}
+            .links {{
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            .links p {{
+                margin: 10px 0;
+                font-size: 16px;
+            }}
+            a {{
+                color: #0066cc;
+                text-decoration: none;
+            }}
+            a:hover {{
+                text-decoration: underline;
+            }}
+            .recommended {{
+                background-color: #e3f2fd;
+                padding: 15px;
+                border-radius: 5px;
+                border-left: 4px solid #2196f3;
+            }}
+        </style>
     </head>
     <body>
-        <h1>Ollama Chat API</h1>
-        <p>API文档: <a href="/docs">/docs</a></p>
-        <p>聊天界面: <a href="/chat">/chat</a></p>
-        <p>WebSocket测试: <a href="/ws-test">/ws-test</a></p>
+        <h1>🤖 RAG-Chat 智能对话系统</h1>
+        <div class="links">
+            <h2>访问入口</h2>
+            {gradio_link}
+            <p>📖 API文档: <a href="/docs">/docs</a></p>
+            <p>💬 聊天界面(旧版): <a href="/chat">/chat</a></p>
+            <p>📚 RAG聊天界面(旧版): <a href="/rag-chat">/rag-chat</a></p>
+            <p>🧪 WebSocket测试: <a href="/ws-test">/ws-test</a></p>
+        </div>
     </body>
     </html>
     """

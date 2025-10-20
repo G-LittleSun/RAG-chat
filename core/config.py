@@ -49,6 +49,10 @@ class Config:
     vector_store_type: str = "auto"  # 向量存储类型
     chromadb_collection_name: str = "rag_documents"  # ChromaDB集合名称
     
+    # RAG 文档处理配置
+    chunk_size: int = 1000  # 文本分块大小
+    chunk_overlap: int = 200  # 文本分块重叠大小
+    
     # ChromaDB 远程服务器配置（可选）
     # 如果设置了 chromadb_remote_host，将使用远程服务器而不是本地存储
     chromadb_remote_host: Optional[str] = None  # 远程服务器地址，例如: "192.168.1.100" 或 "chromadb.example.com"
