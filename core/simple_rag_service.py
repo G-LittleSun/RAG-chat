@@ -12,7 +12,7 @@ try:
     from langchain_community.embeddings import OllamaEmbeddings
     from langchain.text_splitter import RecursiveCharacterTextSplitter
     from langchain.schema import Document
-    from langchain_community.document_loaders import PyPDFLoader, TextLoader
+    from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
     DEPENDENCIES_AVAILABLE = True
 except ImportError as e:
     print(f"❌ RAG服务依赖不可用: {e}")
@@ -187,6 +187,14 @@ class SimpleRAGService:
                 # 创建Document对象
                 from langchain.schema import Document
                 documents = [Document(page_content=content, metadata={"source": file_path})]
+            elif file_extension in ['.doc', '.docx']:
+                # 处理 Word 文档
+                try:
+                    loader = Docx2txtLoader(file_path)
+                    documents = loader.load()
+                except Exception as e:
+                    print(f"❌ Word 文档加载失败: {e}")
+                    return False, f"Word 文档处理失败: {str(e)}"
             else:
                 return False, None
 
