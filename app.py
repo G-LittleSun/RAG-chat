@@ -200,6 +200,23 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+@app.get("/manifest.json")
+async def get_manifest():
+    """返回 PWA manifest 文件"""
+    from fastapi.responses import FileResponse
+    manifest_path = Path("static/manifest.json")
+    if manifest_path.exists():
+        return FileResponse(manifest_path, media_type="application/json")
+    else:
+        # 如果文件不存在，返回一个基本的 manifest
+        return {
+            "name": "RAG Chat System",
+            "short_name": "RAG Chat",
+            "start_url": "/",
+            "display": "standalone"
+        }
+
+
 @app.get("/")
 async def read_root():
     """根路径，返回简单的HTML页面"""
