@@ -340,6 +340,81 @@ class ChromaDBVectorStore:
         except Exception as e:
             print(f"❌ 清空集合失败: {e}")
             return False
+    
+    def delete_by_metadata(self, metadata_filter: dict) -> dict:
+        """
+        根据metadata过滤条件删除文档
+        
+        Args:
+            metadata_filter: 元数据过滤条件，例如 {"document_id": "123"}
+            
+        Returns:
+            dict: 包含成功状态、删除数量等信息
+        """
+        try:
+            if not self.store or not hasattr(self.store, '_collection'):
+                return {
+                    "success": False,
+                    "message": "向量存储未初始化",
+                    "deleted_count": 0
+                }
+            
+            collection = self.store._collection
+            
+            # 获取所有文档
+            all_data = collection.get()
+            
+            if not all_data or 'ids' not in all_data or not all_data['ids']:
+                return {
+                    "success": True,
+                    "message": "集合为空，无需删除",
+                    "deleted_count": 0
+                }
+            
+            # 找到匹配的文档ID
+            ids_to_delete = []
+            metadatas = all_data.get('metadatas', [])
+            
+            for i, metadata in enumerate(metadatas):
+                # 检查是否匹配所有过滤条件
+                match = True
+                for key, value in metadata_filter.items():
+                    if metadata.get(key) != value:
+                        match = False
+                        break
+                
+                if match:
+                    ids_to_delete.append(all_data['ids'][i])
+            
+            if not ids_to_delete:
+                return {
+                    "success": True,
+                    "message": "未找到匹配的文档",
+                    "deleted_count": 0
+                }
+            
+            # 删除匹配的文档
+            collection.delete(ids=ids_to_delete)
+            
+            print(f"✅ 成功删除 {len(ids_to_delete)} 个文档（metadata过滤: {metadata_filter}）")
+            
+            return {
+                "success": True,
+                "message": f"成功删除 {len(ids_to_delete)} 个文档块",
+                "deleted_count": len(ids_to_delete),
+                "deleted_ids": ids_to_delete
+            }
+            
+        except Exception as e:
+            print(f"❌ 删除文档失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": "删除文档时发生错误",
+                "error": str(e),
+                "deleted_count": 0
+            }
 
 
 def create_chromadb_store(embeddings, collection_name: str = "default_collection", store_path: str = "chroma_store"):

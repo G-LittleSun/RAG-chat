@@ -348,8 +348,11 @@ class SimpleRAGService:
         except Exception as e:
             return []
     
-    def delete_document(self, document_id: str) -> dict:
-        """软删除文档 - 通过标记位实现"""
+    def soft_delete_document(self, document_id: str) -> dict:
+        """
+        软删除文档 - 通过标记位实现（适用于不支持删除的向量数据库如FAISS）
+        文档仍保留在向量存储中，但通过metadata标记为已删除，搜索时会被过滤
+        """
         try:
             # 检查文档是否存在
             if document_id not in self.document_metadata:
@@ -379,11 +382,89 @@ class SimpleRAGService:
             
             return {
                 "success": True,
-                "message": f"文档 '{doc_info['filename']}' 已成功删除",
+                "message": f"文档 '{doc_info['filename']}' 已成功软删除",
                 "detail": "文档已被标记为删除，不会在搜索中出现"
             }
                 
         except Exception as e:
+            return {
+                "success": False,
+                "message": "软删除文档时发生错误",
+                "error": f"技术详情: {str(e)}"
+            }
+    
+    def delete_document(self, document_id: str) -> dict:
+        """
+        硬删除文档 - 从向量存储中完全删除（适用于支持删除的数据库如ChromaDB）
+        如果向量存储不支持删除操作，将自动降级为软删除
+        """
+        try:
+            # 检查文档是否存在
+            if document_id not in self.document_metadata:
+                available_ids = list(self.document_metadata.keys())
+                return {
+                    "success": False,
+                    "message": f"文档ID {document_id} 不存在",
+                    "error": f"当前可用的文档ID: {available_ids}。总共有 {len(available_ids)} 个文档。"
+                }
+            
+            doc_info = self.document_metadata[document_id]
+            
+            # 检查是否已经被删除
+            if doc_info.get("deleted", False):
+                return {
+                    "success": False,
+                    "message": f"文档 '{doc_info['filename']}' 已经被删除",
+                    "error": "此文档已被标记为删除状态"
+                }
+            
+            # 尝试硬删除：从向量存储中删除
+            hard_delete_success = False
+            deleted_chunks = 0
+            
+            if hasattr(self.vector_store, 'delete_by_metadata'):
+                # 向量存储支持删除操作（如 ChromaDB）
+                print(f"🗑️ 从向量存储中硬删除文档 {document_id}...")
+                delete_result = self.vector_store.delete_by_metadata({"document_id": document_id})
+                
+                if delete_result.get("success"):
+                    hard_delete_success = True
+                    deleted_chunks = delete_result.get("deleted_count", 0)
+                    print(f"✅ 成功从向量存储删除 {deleted_chunks} 个文档块")
+                else:
+                    print(f"⚠️ 向量存储删除失败: {delete_result.get('message', '未知错误')}")
+            else:
+                # 向量存储不支持删除（如 FAISS），降级为软删除
+                print(f"⚠️ 当前向量存储 ({self.vector_store_type}) 不支持硬删除，将使用软删除")
+                return self.soft_delete_document(document_id)
+            
+            if hard_delete_success:
+                # 从 metadata 中移除文档记录（硬删除）
+                del self.document_metadata[document_id]
+                
+                # 保存更新的metadata
+                self._save_document_metadata()
+                
+                # 尝试保存向量存储（如果支持）
+                if hasattr(self.vector_store, 'save'):
+                    save_result = self.vector_store.save()
+                    if save_result:
+                        print(f"💾 向量存储已保存")
+                
+                return {
+                    "success": True,
+                    "message": f"文档 '{doc_info['filename']}' 已成功删除",
+                    "detail": f"已从向量存储中删除 {deleted_chunks} 个文档块，并清除所有记录"
+                }
+            else:
+                # 硬删除失败，降级为软删除
+                print(f"⚠️ 硬删除失败，降级为软删除")
+                return self.soft_delete_document(document_id)
+                
+        except Exception as e:
+            print(f"❌ 删除文档时发生异常: {e}")
+            import traceback
+            traceback.print_exc()
             return {
                 "success": False,
                 "message": "删除文档时发生错误",
